@@ -50,7 +50,7 @@ Use your provider's OpenAI-compatible base URL and model name if you are not usi
 
 ## Image Limits
 
-- One image per message
+- One image per message (enforced by the UI; the backend validates type and size of each image)
 - PNG, JPEG, or WebP only
 - 4 MB maximum file size
 - Data URLs only, no remote image URLs
