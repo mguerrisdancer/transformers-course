@@ -3,12 +3,19 @@ const chatForm = document.querySelector("#chatForm");
 const messageInput = document.querySelector("#messageInput");
 const sendButton = document.querySelector("#sendButton");
 const clearButton = document.querySelector("#clearButton");
+const imageInput = document.querySelector("#imageInput");
+const attachmentPreview = document.querySelector("#attachmentPreview");
+const attachmentError = document.querySelector("#attachmentError");
 const contextView = document.querySelector("#contextView");
 const usageSummary = document.querySelector("#usageSummary");
+
+const allowedImageTypes = ["image/png", "image/jpeg", "image/webp"];
+const maxImageBytes = 4 * 1024 * 1024;
 
 let messages = [];
 let visibleMessages = [];
 let turns = [];
+let selectedImage = null;
 
 function escapeHtml(value) {
   return value
@@ -123,12 +130,25 @@ function renderChat() {
       (message) => `
         <article class="message ${message.role}">
           <div class="message-label">${message.role}</div>
-          <div class="bubble">${renderMarkdown(message.content)}</div>
+          <div class="bubble">${renderMessageContent(message)}</div>
         </article>
       `,
     )
     .join("");
   chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function renderMessageContent(message) {
+  const image = message.image
+    ? `
+      <figure class="message-image">
+        <img src="${escapeHtml(message.image.dataUrl)}" alt="${escapeHtml(message.image.name)}" />
+        <figcaption>${escapeHtml(message.image.name)} (${formatBytes(message.image.size)})</figcaption>
+      </figure>
+    `
+    : "";
+
+  return `${renderMarkdown(message.content || "")}${image}`;
 }
 
 function renderContext() {
@@ -150,7 +170,47 @@ function renderContext() {
 function setLoading(isLoading) {
   sendButton.disabled = isLoading;
   messageInput.disabled = isLoading;
+  imageInput.disabled = isLoading;
   sendButton.textContent = isLoading ? "Sending..." : "Send";
+}
+
+function formatBytes(bytes) {
+  return `${Math.round(bytes / 1024)} KB`;
+}
+
+function showAttachmentError(message) {
+  attachmentError.textContent = message;
+}
+
+function clearSelectedImage() {
+  selectedImage = null;
+  imageInput.value = "";
+  attachmentPreview.hidden = true;
+  attachmentPreview.innerHTML = "";
+}
+
+function renderSelectedImage() {
+  if (!selectedImage) {
+    clearSelectedImage();
+    return;
+  }
+
+  attachmentPreview.hidden = false;
+  attachmentPreview.innerHTML = `
+    <img src="${escapeHtml(selectedImage.dataUrl)}" alt="${escapeHtml(selectedImage.name)}" />
+    <span>${escapeHtml(selectedImage.name)} (${formatBytes(selectedImage.size)})</span>
+    <button class="secondary" id="removeImageButton" type="button">Remove</button>
+  `;
+  document.querySelector("#removeImageButton").addEventListener("click", clearSelectedImage);
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(reader.result));
+    reader.addEventListener("error", () => reject(new Error("Could not read image.")));
+    reader.readAsDataURL(file);
+  });
 }
 
 function parseSseFrame(frame) {
@@ -168,12 +228,23 @@ chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const content = messageInput.value.trim();
-  if (!content) return;
+  if (!content && !selectedImage) return;
 
-  const userMessage = { role: "user", content };
+  const image = selectedImage;
+  const userMessage = image
+    ? {
+        role: "user",
+        content: [
+          ...(content ? [{ type: "text", text: content }] : []),
+          { type: "image_url", image_url: { url: image.dataUrl, detail: "low" } },
+        ],
+      }
+    : { role: "user", content };
+  const visibleUserMessage = image ? { role: "user", content, image } : userMessage;
   messages.push(userMessage);
-  visibleMessages.push(userMessage);
+  visibleMessages.push(visibleUserMessage);
   messageInput.value = "";
+  clearSelectedImage();
   renderChat();
   setLoading(true);
 
@@ -258,9 +329,46 @@ clearButton.addEventListener("click", () => {
   messages = [];
   visibleMessages = [];
   turns = [];
+  clearSelectedImage();
+  showAttachmentError("");
   renderChat();
   renderContext();
   messageInput.focus();
+});
+
+imageInput.addEventListener("change", async () => {
+  const file = imageInput.files[0];
+  showAttachmentError("");
+
+  if (!file) {
+    clearSelectedImage();
+    return;
+  }
+
+  if (!allowedImageTypes.includes(file.type)) {
+    clearSelectedImage();
+    showAttachmentError("Image must be PNG, JPEG, or WebP.");
+    return;
+  }
+
+  if (file.size > maxImageBytes) {
+    clearSelectedImage();
+    showAttachmentError("Image must be 4 MB or smaller.");
+    return;
+  }
+
+  try {
+    selectedImage = {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      dataUrl: await readFileAsDataUrl(file),
+    };
+    renderSelectedImage();
+  } catch (error) {
+    clearSelectedImage();
+    showAttachmentError(error.message);
+  }
 });
 
 renderChat();

@@ -26,6 +26,7 @@ body {
 }
 
 button,
+label,
 textarea {
   font: inherit;
 }
@@ -140,6 +141,24 @@ h2 {
   color: var(--danger);
 }
 
+.message-image {
+  margin: 0.75rem 0 0;
+}
+
+.message-image img {
+  display: block;
+  max-width: 12rem;
+  max-height: 12rem;
+  border-radius: 0.85rem;
+  object-fit: cover;
+}
+
+.message-image figcaption {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .bubble > *:first-child {
   margin-top: 0;
 }
@@ -173,10 +192,16 @@ h2 {
 
 .composer {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 0.75rem;
   padding: 1rem;
   border-top: 1px solid var(--border);
+}
+
+.composer textarea,
+.attachment-preview,
+.attachment-error {
+  grid-column: 1 / -1;
 }
 
 textarea {
@@ -221,6 +246,39 @@ button:disabled {
 
 .secondary:hover {
   background: var(--panel-strong);
+}
+
+.attachment-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.attachment-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+}
+
+.attachment-preview[hidden] {
+  display: none;
+}
+
+.attachment-preview img {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.attachment-error {
+  color: var(--danger);
+  min-height: 1.2rem;
 }
 
 .usage-summary {
