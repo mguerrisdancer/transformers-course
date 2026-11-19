@@ -49,17 +49,28 @@ function renderMarkdown(markdown) {
       const lines = block.value.split("\n");
       const html = [];
       let listItems = [];
+      let listType = "ul";
 
       function flushList() {
         if (listItems.length > 0) {
-          html.push(`<ul>${listItems.map((item) => `<li>${item}</li>`).join("")}</ul>`);
+          html.push(`<${listType}>${listItems.map((item) => `<li>${item}</li>`).join("")}</${listType}>`);
           listItems = [];
         }
       }
 
-      for (const line of lines) {
+      function addListItem(type, item) {
+        if (listItems.length > 0 && listType !== type) flushList();
+        listType = type;
+        listItems.push(item);
+      }
+
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
         const trimmed = line.trim();
         if (!trimmed) {
+          const nextLine = lines.slice(index + 1).find((item) => item.trim());
+          const nextListType = nextLine?.trim().match(/^[-*]\s+/) ? "ul" : nextLine?.trim().match(/^\d+\.\s+/) ? "ol" : null;
+          if (listItems.length > 0 && listType === nextListType) continue;
           flushList();
           continue;
         }
@@ -74,7 +85,13 @@ function renderMarkdown(markdown) {
 
         const list = trimmed.match(/^[-*]\s+(.+)$/);
         if (list) {
-          listItems.push(renderInlineMarkdown(list[1]));
+          addListItem("ul", renderInlineMarkdown(list[1]));
+          continue;
+        }
+
+        const orderedList = trimmed.match(/^\d+\.\s+(.+)$/);
+        if (orderedList) {
+          addListItem("ol", renderInlineMarkdown(orderedList[1]));
           continue;
         }
 
@@ -149,9 +166,18 @@ chatForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({ messages }),
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+      }
+      throw error;
+    }
     if (!response.ok) {
-      throw new Error(data.detail || "Request failed");
+      throw new Error(data.detail || `HTTP ${response.status}: ${responseText || response.statusText}`);
     }
 
     const assistantMessage = { role: "assistant", content: data.answer };
