@@ -1,8 +1,10 @@
 # EASY-CHATGPT
 
-Baseline chat app with a vanilla HTML/CSS/JavaScript frontend and a FastAPI backend proxying requests to an OpenAI-compatible chat completions API.
+Chat app with a vanilla HTML/CSS/JavaScript frontend and a FastAPI backend proxying requests to an OpenAI-compatible chat completions API.
 
 The browser never calls the model directly. It sends conversation messages to FastAPI, and FastAPI calls the configured model using values from `.env`.
+
+The UI uses the streaming endpoint, `POST /api/chat/stream`, which proxies tokens as server-sent events. The original non-streaming endpoint, `POST /api/chat`, remains available and returns the full answer at once.
 
 ## Files
 
@@ -76,4 +78,4 @@ After each turn, the right panel shows:
 - `messages_sent`: the exact messages FastAPI sent to the model
 - `usage`: the token usage object returned by the OpenAI-compatible API
 
-This lets you watch the conversation context and token counts grow turn by turn.
+This lets you watch the conversation context and token counts grow turn by turn. In streaming mode, token usage is requested from the provider with `stream_options.include_usage` and displayed when the turn completes.

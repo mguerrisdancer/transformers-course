@@ -38,7 +38,14 @@ function renderMarkdown(markdown) {
     blocks.push({ type: "code", language: match[1], value: match[2] });
     cursor = match.index + match[0].length;
   }
-  blocks.push({ type: "text", value: markdown.slice(cursor) });
+  const remaining = markdown.slice(cursor);
+  const openFence = remaining.match(/```([\w-]*)\n?/);
+  if (openFence) {
+    blocks.push({ type: "text", value: remaining.slice(0, openFence.index) });
+    blocks.push({ type: "code", language: openFence[1], value: remaining.slice(openFence.index + openFence[0].length) });
+  } else {
+    blocks.push({ type: "text", value: remaining });
+  }
 
   return blocks
     .map((block) => {
@@ -146,6 +153,17 @@ function setLoading(isLoading) {
   sendButton.textContent = isLoading ? "Sending..." : "Send";
 }
 
+function parseSseFrame(frame) {
+  const lines = frame.split("\n");
+  const event = lines.find((line) => line.startsWith("event: "))?.slice(7) || "message";
+  const data = lines
+    .filter((line) => line.startsWith("data: "))
+    .map((line) => line.slice(6))
+    .join("\n");
+
+  return { event, data: data ? JSON.parse(data) : {} };
+}
+
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -159,34 +177,68 @@ chatForm.addEventListener("submit", async (event) => {
   renderChat();
   setLoading(true);
 
+  let assistantMessage;
+
   try {
-    const response = await fetch("/api/chat", {
+    const response = await fetch("/api/chat/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),
     });
 
-    const responseText = await response.text();
-    let data;
-    try {
-      data = responseText ? JSON.parse(responseText) : {};
-    } catch (error) {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
-      }
-      throw error;
-    }
     if (!response.ok) {
-      throw new Error(data.detail || `HTTP ${response.status}: ${responseText || response.statusText}`);
+      const responseText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
     }
 
-    const assistantMessage = { role: "assistant", content: data.answer };
-    messages.push(assistantMessage);
+    assistantMessage = { role: "assistant", content: "" };
     visibleMessages.push(assistantMessage);
-    turns.push({ messages_sent: data.messages_sent, usage: data.usage });
+    renderChat();
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let usage = null;
+    let messagesSent = null;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop();
+
+      for (const frame of frames) {
+        if (!frame.trim()) continue;
+        const streamEvent = parseSseFrame(frame);
+
+        if (streamEvent.event === "token") {
+          assistantMessage.content += streamEvent.data.content || "";
+          renderChat();
+        } else if (streamEvent.event === "usage") {
+          usage = streamEvent.data;
+        } else if (streamEvent.event === "done") {
+          messagesSent = streamEvent.data.messages_sent;
+        } else if (streamEvent.event === "error") {
+          throw new Error(streamEvent.data.detail || "Streaming request failed");
+        }
+      }
+
+      if (done) break;
+    }
+
+    if (!messagesSent) {
+      throw new Error("Stream ended before completion.");
+    }
+
+    messages.push(assistantMessage);
+    turns.push({ messages_sent: messagesSent, usage });
     renderChat();
     renderContext();
   } catch (error) {
+    if (assistantMessage && !assistantMessage.content) {
+      visibleMessages = visibleMessages.filter((message) => message !== assistantMessage);
+    }
     visibleMessages.push({ role: "error", content: error.message });
     renderChat();
   } finally {

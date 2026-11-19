@@ -1,10 +1,11 @@
+import json
 import os
 from pathlib import Path
 from typing import Literal
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI, OpenAIError
 from pydantic import BaseModel, Field
@@ -72,6 +73,51 @@ def chat(request: ChatRequest):
         "messages_sent": messages,
         "usage": usage,
     }
+
+
+def sse_event(event: str, data: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+@app.post("/api/chat/stream")
+def chat_stream(request: ChatRequest):
+    client, model = get_client()
+    messages = [message.model_dump() for message in request.messages]
+
+    def stream_events():
+        try:
+            stream = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=True,
+                stream_options={"include_usage": True},
+            )
+
+            for chunk in stream:
+                if chunk.usage:
+                    yield sse_event("usage", chunk.usage.model_dump())
+
+                if not chunk.choices:
+                    continue
+
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield sse_event("token", {"content": content})
+
+            yield sse_event("done", {"messages_sent": messages})
+        except OpenAIError as exc:
+            yield sse_event("error", {"detail": str(exc)})
+        except Exception as exc:
+            yield sse_event("error", {"detail": str(exc)})
+
+    return StreamingResponse(
+        stream_events(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 if FRONTEND_DIR.exists():
