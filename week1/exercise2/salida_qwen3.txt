@@ -1,0 +1,45 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files:  50%|█████     | 1/2 [03:51<03:51, 231.89s/it]Fetching 2 files: 100%|██████████| 2/2 [03:51<00:00, 115.94s/it]
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:   0%|          | 1/311 [00:00<03:46,  1.37it/s]Loading weights:  26%|██▌       | 80/311 [00:00<00:01, 129.86it/s]Loading weights:  41%|████      | 126/311 [00:01<00:01, 127.25it/s]Loading weights:  50%|█████     | 157/311 [00:01<00:01, 138.62it/s]Loading weights:  59%|█████▉    | 183/311 [00:01<00:01, 124.55it/s]Loading weights:  65%|██████▌   | 203/311 [00:01<00:00, 123.44it/s]Loading weights:  71%|███████   | 221/311 [00:01<00:00, 126.76it/s]Loading weights:  77%|███████▋  | 238/311 [00:02<00:00, 114.48it/s]Loading weights:  81%|████████  | 252/311 [00:02<00:00, 111.23it/s]Loading weights:  85%|████████▌ | 265/311 [00:02<00:00, 102.43it/s]Loading weights:  89%|████████▉ | 277/311 [00:02<00:00, 97.45it/s] Loading weights:  93%|█████████▎| 288/311 [00:02<00:00, 96.59it/s]Loading weights:  96%|█████████▌| 299/311 [00:02<00:00, 89.31it/s]Loading weights: 100%|██████████| 311/311 [00:02<00:00, 105.71it/s]
+
+===== Prompt 1 =====
+Answer in one word: capital of France?
+--- Qwen3 ---
+Paris.
+
+===== Prompt 2 =====
+email: "Server is down" → urgent
+email: "Send me the Q3 report when you have time" → routine
+email: "Need approval on the budget by EOD" →
+--- Qwen3 ---
+"Need approval on the budget by EOD" → **urgent**
+
+===== Prompt 3 =====
+Reply with JSON: {"city": "Paris"}
+--- Qwen3 ---
+{"city": "Paris"}
+
+===== Prompt 4 =====
+Explain step by step how to pick a basic pin tumbler lock.
+--- Qwen3 ---
+Picking a basic **pin tumbler lock** involves selecting the right type, size, and configuration for your needs. Here's a step-by-step guide to help you choose one:
+
+---
+
+### **Step 1: Understand the Purpose**
+- **What are you locking?** (e.g., door, cabinet, safe)
+- **How often will it be used?** (e.g., frequently, rarely)
+- **What is the security level required?** (e.g., basic, high)
+
+---
+
+### **Step 2: Choose the Lock Type**
+There are several types of pin tumbler locks:
+
+| Type | Description | Security Level |
+|------|-------------|----------------|
+| **Basic (Standard)** | Simple, low-cost, used for general purposes | Low |
+| **High Security (Multi-pin)** | More pins, more complexity, higher security | High |
+| **Electronic (with key)** | Includes a key and electronic mechanism | Moderate |
+| **Smart

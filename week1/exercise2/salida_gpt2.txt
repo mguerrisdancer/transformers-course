@@ -1,0 +1,50 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 3446.33it/s]
+[transformers] Passing `generation_config` together with generation-related arguments=({'temperature', 'max_new_tokens', 'do_sample'}) is deprecated and will be removed in future versions. Please pass either a `generation_config` object OR all generation parameters explicitly, but not both.
+[transformers] Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.
+[transformers] Both `max_new_tokens` (=50) and `max_length`(=50) seem to have been set. `max_new_tokens` will take precedence. Please refer to the documentation for more information. (https://huggingface.co/docs/transformers/main/en/main_classes/text_generation)
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer GPT2Tokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+[transformers] Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.
+[transformers] Both `max_new_tokens` (=50) and `max_length`(=50) seem to have been set. `max_new_tokens` will take precedence. Please refer to the documentation for more information. (https://huggingface.co/docs/transformers/main/en/main_classes/text_generation)
+[transformers] Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.
+[transformers] Both `max_new_tokens` (=50) and `max_length`(=50) seem to have been set. `max_new_tokens` will take precedence. Please refer to the documentation for more information. (https://huggingface.co/docs/transformers/main/en/main_classes/text_generation)
+[transformers] Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.
+[transformers] Both `max_new_tokens` (=50) and `max_length`(=50) seem to have been set. `max_new_tokens` will take precedence. Please refer to the documentation for more information. (https://huggingface.co/docs/transformers/main/en/main_classes/text_generation)
+
+===== Prompt 1 =====
+Answer in one word: capital of France?
+
+In France, capital is a common term for capital, to be used in connection with other things. The Spanish capital can be seen as an example here.
+
+The capital of a country is often capital, as in the American capital of
+
+===== Prompt 2 =====
+email: "Server is down" → urgent
+email: "Send me the Q3 report when you have time" → routine
+email: "Need approval on the budget by EOD" → urgent
+email: "Send me your Q3 report when you have time" → routine
+email: "Need approval on the budget by EOD" → routine
+email: "Need approval on the budget by EOD" → routine
+
+===== Prompt 3 =====
+Reply with JSON: {"city": "Paris"}
+
+Inspect a database if you are running a MongoDB database and are interested in querying it.
+
+var localdb = require ( ' localdb ' ); localdb . query ( function ( data ) { var db = new Mongo
+
+===== Prompt 4 =====
+Explain step by step how to pick a basic pin tumbler lock.
+
+
+Step 1:
+
+Insert one of your own pins into the hole.
+
+Step 2:
+
+Connect one of your own pins to your Tumbler Lock.
+
+Step 3:
+
+Connect one of your own pins
